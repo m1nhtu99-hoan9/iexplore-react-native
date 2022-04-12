@@ -1,0 +1,46 @@
+{
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "eject": "expo eject"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^12.0.0",
+    "@react-native-community/datetimepicker": "~3.5.2",
+    "@react-native-picker/picker": "~2.1.0",
+    "@react-navigation/native": "~6.0.6",
+    "@react-navigation/native-stack": "^6.2.5",
+    "date-fns": "^2.26.0",
+    "expo": "~43.0.2",
+    "expo-app-loading": "~1.2.1",
+    "expo-asset": "~8.4.3",
+    "expo-file-system": "~13.0.3",
+    "expo-sqlite": "~10.0.3",
+    "expo-sqlite-orm": "^1.5.6",
+    "expo-status-bar": "~1.1.0",
+    "formik": "2.2.9",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-hash-string": "^1.0.0",
+    "react-native": "0.64.3",
+    "react-native-gesture-handler": "~1.10.3",
+    "react-native-reanimated": "~2.2.4",
+    "react-native-safe-area-context": "3.3.2",
+    "react-native-screens": "~3.8.0",
+    "react-native-ui-lib": "6.4.0",
+    "react-native-web": "0.17.1",
+    "yup": "0.32.11"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@types/ramda": "0.27.50",
+    "@types/react": "17.0.35",
+    "@types/react-native": "0.64.19",
+    "ramda": "0.27.1",
+    "typescript": "~4.3.5"
+  },
+  "private": true
+}
