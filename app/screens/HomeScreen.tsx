@@ -2,13 +2,13 @@ import React, { useEffect, useLayoutEffect, useState } from "react";
 import { View } from "react-native-ui-lib";
 import * as R from "ramda";
 
-import { HomeScreenProps } from "../navigation/typings";
+import { HomeRouteName, ScreenProps } from "../navigation/typings";
 import { Activity } from "../domain/Activity.d";
 import { FloatingPlusButton } from "../components";
 import { ScreenNames } from "../constants";
 
 
-export default function HomeScreen({ navigation, route }: HomeScreenProps) {
+export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteName>) {
   const [ activities, setActivities ] = useState<Activity[]>([]);
 
   useLayoutEffect(() => {

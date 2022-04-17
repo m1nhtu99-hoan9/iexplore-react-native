@@ -1,36 +1,44 @@
 import React from "react";
-import { ImageStyle, ScrollView, StyleProp, StyleSheet } from 'react-native';
+import { ImageStyle, ScrollView, StyleProp, StyleSheet, LogBox } from 'react-native';
 import { Button, Colors, Constants, DateTimePicker, Text, TextField, View, Incubator } from "react-native-ui-lib";
 import { FormikHelpers, useFormik } from "formik";
 import { AntDesign } from "@expo/vector-icons";
+import * as R from "ramda";
 
 import { ActivityEntity } from "../domain";
 import { Activity } from "../domain/Activity.d";
-import * as Colours from "../constants/colours";
 import { normaliseSizeHorizontal, StatusBarHeight } from "../helpers/responsitivity";
 import { DATE_FORMAT, TIME_FORMAT } from "../appSettings";
+import { ErrorMessage, NewActivityRouteName, ScreenProps } from "../navigation/typings";
+import { Colours, ScreenNames } from "../constants";
 
+// HACK: to suppress a warning thrown by `react-navigation` to warn against
+// navigation action params having too many nested object level.
+LogBox.ignoreLogs(["Warning: Non-serializable values were found in the navigation state"]);
 
-// TODO: remove all console debug statements
-// TODO: declare type for props
-export default function NewActivityScreen(props: unknown) {
+export default function NewActivityScreen({ route, navigation }: ScreenProps<NewActivityRouteName>) {
   const formik = useFormik({
     validationSchema: ActivityEntity.validationSchema,
     initialValues: ActivityEntity.getDefault() as Activity,
-    onSubmit(values: Activity, formikHelpers: FormikHelpers<Activity>) {
-      const { resetForm } = formikHelpers;
-      resetForm();
+    onSubmit(values: Activity, _) {
+      console.debug("Submission data: ");
       console.debug(values);
     },
   });
 
   const {
     values, handleChange, handleBlur,
-    errors, setFieldTouched, touched, isValid,
-    handleSubmit, handleReset
+    errors, isValid, handleSubmit, handleReset
   } = formik;
 
-  // TODO: kick-start validations
+  function onSubmitBtnPressed() {
+    const errorMessages = R.pipe(R.values, R.reject(R.not))(errors) as ErrorMessage[];
+    navigation.push(ScreenNames.NewActivityConfirmation,
+      R.length(errorMessages) !== 0
+        ? ({ payload: errorMessages, status: 'WARNING' })
+        : ({ payload: values as Activity, status: 'SUCCEEDED' }));
+  }
+
   return (
     <View flex style={ { backgroundColor: Colors.white } }>
       <ScrollView
@@ -48,7 +56,7 @@ export default function NewActivityScreen(props: unknown) {
             style={ { height: normaliseSizeHorizontal(30) } }
             enableErrors
             validationMessagePosition={ Incubator.TextField.validationMessagePositions.BOTTOM }
-            validationMessage={ errors.name }
+            validationMessage={ errors.name ?? '' }
             value={ values.name }
             onChangeText={ handleChange('name') }
             onBlur={ handleBlur('name') }
@@ -79,10 +87,11 @@ export default function NewActivityScreen(props: unknown) {
             style={ { fontSize: 14 } }
             placeholder='Touch to select a date'
             dialogProps={ { title: 'When is the activity event held?' } }
-            containerStyle={ { marginVertical: 20 } }
             placeholer='Select the held date'
+            value={ values.date }
+            onChangeText={ handleChange('date') }
           />
-          <Text style={ { color: Colors.red20, alignSelf: 'flex-start', flexGrow: 0.2 } }>{ errors.date }</Text>
+          <Text style={ styles.dateTimeErrorTextArea }>{ errors.date ?? '' }</Text>
         </View>
         <View flex key="activity-attended-datepicker-wrapper"
               style={ { height: 20 + '%', marginBottom: StatusBarHeight, justifyContent: 'flex-start' } }
@@ -95,20 +104,29 @@ export default function NewActivityScreen(props: unknown) {
             style={ { fontSize: 14, flexGrow: 0.8 } }
             placeholder='Touch to set the time'
             dialogProps={ { title: 'Attended at when?' } }
-            containerStyle={ { marginVertical: 20 } }
             placeholer='Select the attended date'
+            value={ values.attendedAt }
+            onChangeText={ handleChange('attendedAt') }
           />
-          <Text style={ { color: Colors.red20, alignSelf: 'flex-start', flexGrow: 0.2 } }>{ errors.attendedAt }</Text>
+          <Text style={ styles.dateTimeErrorTextArea }>{ errors.attendedAt ?? '' }</Text>
         </View>
-        <TextField
-          title={ "Reporter's Name (*)" }
-          style={ { height: normaliseSizeHorizontal(30) } }
-          value={ values.reporterName }
-          error={ errors.reporterName }
-          underlineColor={ !!errors.reporterName ? Colours.RED_VENETIAN : Colors.blue20 }
-        />
+        <View style={ { height: 20 + '%' } }
+              key="activity-report-name-text-area-wrapper">
+          <Incubator.TextField
+            placeholder="Reporter's name (*)"
+            floatingPlaceholderStyle={ styles.textAreaFloatingPlaceholder }
+            floatingPlaceholder
+            style={ { height: normaliseSizeHorizontal(30) } }
+            enableErrors
+            validationMessagePosition={ Incubator.TextField.validationMessagePositions.BOTTOM }
+            validationMessage={ errors.reporterName }
+            value={ values.reporterName }
+            onChangeText={ handleChange('reporterName') }
+            onBlur={ handleBlur('reporterName') }
+            fieldStyle={ styles.textAreaUnderline }
+          />
+        </View>
       </ScrollView>
-      {/* BUTTONS */ }
       <View
         key="action-buttons-area-wrapper"
         style={ styles.buttonContainer }
@@ -116,10 +134,7 @@ export default function NewActivityScreen(props: unknown) {
         <Button
           label=' RESET'
           style={ { alignSelf: 'baseline', width: 30 + '%' } }
-          onPress={ (event) => {
-            handleReset(event);
-            console.debug("default: ", formik.initialValues);
-          } }
+          onPress={ handleReset }
           backgroundColor={ Colors.grey30 }
           iconSource={ (iconStyles: StyleProp<ImageStyle>) => (
             <AntDesign name="reload1" color="white" { ...iconStyles }/>
@@ -128,7 +143,10 @@ export default function NewActivityScreen(props: unknown) {
         <Button
           style={ { alignSelf: 'baseline', width: 60 + '%' } }
           label=' CONFIRM'
-          onPress={ handleSubmit }
+          onPress={ (e) => {
+            handleSubmit(e);
+            onSubmitBtnPressed();
+          } }
           backgroundColor={ Colors.blue50 }
           iconSource={ (iconStyles: StyleProp<ImageStyle>) => (
             <AntDesign name="checkcircleo" color="white" { ...iconStyles }/>
@@ -136,7 +154,7 @@ export default function NewActivityScreen(props: unknown) {
         />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -150,6 +168,7 @@ const styles = StyleSheet.create({
   },
   textAreaFloatingPlaceholder: {
     color: Colors.black,
+    fontSize: 12
   },
   textAreaUnderline: {
     borderBottomWidth: 1,
@@ -160,6 +179,11 @@ const styles = StyleSheet.create({
     height: normaliseSizeHorizontal(100),
     borderWidth: 1,
     marginBottom: normaliseSizeHorizontal(10),
+  },
+  dateTimeErrorTextArea: {
+    color: Colors.red20,
+    alignSelf: 'flex-start',
+    flexGrow: 0.2
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -174,4 +198,4 @@ const styles = StyleSheet.create({
     marginBottom: Constants.isIphoneX ? 0 : StatusBarHeight,
     borderRadius: 12
   }
-})
+});

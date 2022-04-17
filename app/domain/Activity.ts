@@ -9,10 +9,10 @@ export function getDefault() {
     name: "Activity Name",
     location: undefined,
     date: new Date(),
-    attendedAt: undefined,
+    attendedAt: undefined as Date | undefined,
     reporterName: "John Doe"
   };
-  activityObj.attendedAt = activityObj.location;
+  activityObj.attendedAt = activityObj.date;
 
   return activityObj;
 }
@@ -39,7 +39,7 @@ export const validationSchema = yup.object()
       .matches(/^[a-zA-Z0-9\'\,\.\,\ ]{3,}$/,
         "Reporter's name must be in a single line and contain at least 3 characters. "
         + "Characters allowed: (A-Z), (a-z), (0-9), ('), (,), (.)")
-      .required(),
+      .required("Reporter's name is required"),
   })
 ;
 

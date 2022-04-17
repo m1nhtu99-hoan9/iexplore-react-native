@@ -13,15 +13,21 @@ export function addNewActivity(db: WebSQLDatabase, entity: Activity): number | n
 
   let addedActivityId = null;
   executeSingleSqlCommand(db, sqlCmd, {
-    handleResult: (_, addedId) => {
+    handleResult(_, addedId) {
       addedActivityId = addedId;
     }
   });
   return addedActivityId;
 }
 
-export function deleteActivity(db: WebSQLDatabase, activityId: number) {
-  executeSingleSqlCommand(db, `DELETE FROM activity WHERE id = ${activityId}`)
+export function deleteActivity(db: WebSQLDatabase, activityId: number): boolean | undefined {
+  let succeeded = undefined;
+  executeSingleSqlCommand(db, `DELETE FROM activity WHERE id = ${activityId}`, {
+      handleResult(rowsAffected, _) {
+        succeeded = rowsAffected > 0;
+      }
+    });
+  return succeeded;
 }
 
 function toSqlText(value: string | Date | undefined) {
