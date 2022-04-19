@@ -1,11 +1,13 @@
 import React from 'react';
 import AppProvider from "./AppProvider";
-import DbConnectionProvider from "./DbConnectionProvider";
+import { ActivityDbServiceProvider, DbConnectionProvider } from "./app/components/providers";
 
 export default function App() {
   return (
     <DbConnectionProvider>
-      <AppProvider/>
+      <ActivityDbServiceProvider>
+        <AppProvider/>
+      </ActivityDbServiceProvider>
     </DbConnectionProvider>
   )
 };
