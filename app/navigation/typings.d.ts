@@ -18,7 +18,4 @@ export type RootStackParamList = ParamListBase & {
   }
 }
 
-export type ScreenProps<TRouteName> = {
-  route: RouteProp<RootStackParamList, TRouteName>,
-  navigation: NativeStackNavigationProp<RootStackParamList, TRouteName>
-}
+export type ScreenProps<TRouteName> = NativeStackScreenProps<RootStackParamList, TRouteName>;

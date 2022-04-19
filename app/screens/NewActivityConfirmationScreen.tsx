@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Button, Colors, Text, View } from "react-native-ui-lib";
-import { FlatList } from "react-native";
-import { WebSQLDatabase } from "expo-sqlite";
+import { FlatList, LogBox } from "react-native";
 import { hashString } from "react-hash-string";
-import { formatISO } from "date-fns";
 
-import {
-  ErrorMessage, HomeRouteName,
-  NewActivityConfirmationRouteName, ScreenProps
-} from "../navigation/typings";
+import { ErrorMessage, NewActivityConfirmationRouteName, ScreenProps } from "../navigation/typings";
 import { Colours, ScreenNames } from "../constants";
+import { toString } from "../helpers/dateTimeUtils";
 import { Activity } from "../domain/Activity.d";
-import { useDbConnectionContext } from "../context/dbConnectionContext";
-import { addNewActivity } from "../persistence/activityCommands";
+import { useActivityDbServiceContext } from "../context/activityDbServiceContext";
+import { ActivityDbService } from "../services";
+
+// HACK: to suppress a warning thrown by `react-navigation` to warn against
+// navigation action params having too many nested object level.
+LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
 
 export default function NewActivityConfirmationScreen({ route, navigation }
                                                         : ScreenProps<NewActivityConfirmationRouteName>) {
+  const activityDbService = useActivityDbServiceContext() as ActivityDbService;
   const { payload, status } = route.params;
-  const db = useDbConnectionContext() as WebSQLDatabase;
 
-  const [ addedActivityId, setAddedActivityId ] = useState<number | null | undefined>(undefined);
+  const [ addedActivityId, setAddedActivityId ] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (addedActivityId === undefined) {
@@ -36,11 +36,16 @@ export default function NewActivityConfirmationScreen({ route, navigation }
     }
   }, [ addedActivityId ]);
 
+  function onAddThisActivityBtnPressed() {
+    activityDbService.add(payload)
+      .then(id => setAddedActivityId(id));
+  }
+
   return (
     <View spread flex>
       <View marginT-20 marginH-20>
-        { status === 'SUCCEEDED' ? (<SucceededContent payload={ payload as Activity }/>) : null }
-        { status === 'WARNING' ? (<WarningContent payload={ payload as ErrorMessage[] }/>) : null }
+        { status === 'SUCCEEDED' ? ( <SucceededContent payload={ payload as Activity }/> ) : null }
+        { status === 'WARNING' ? ( <WarningContent payload={ payload as ErrorMessage[] }/> ) : null }
       </View>
       { status === 'SUCCEEDED' ? (
         <View margin-20 right>
@@ -48,7 +53,7 @@ export default function NewActivityConfirmationScreen({ route, navigation }
             text60
             link
             label="Add this Activity >>>"
-            onPress={ () => setAddedActivityId(saveNewActivityToDb(db, payload as Activity)) }
+            onPress={ onAddThisActivityBtnPressed }
           />
         </View>
       ) : null }
@@ -60,18 +65,18 @@ export default function NewActivityConfirmationScreen({ route, navigation }
 
     return (
       <View margin-20>
-        <Text>{ `Activity Name: ${ toString(name) }` }</Text>
-        <Text>{ `Location: ${ toString(location) }` }</Text>
-        <Text>{ `Date: ${ toString(date) }` }</Text>
-        <Text>{ `Reporter's Name: ${ toString(reporterName) }` }</Text>
-        <Text>{ `Attended At: ${ toString(attendedAt) }` }</Text>
+        <Text>{ `Activity Name: ${ represent(name) }` }</Text>
+        <Text>{ `Location: ${ represent(location) }` }</Text>
+        <Text>{ `Date: ${ represent(date) }` }</Text>
+        <Text>{ `Reporter's Name: ${ represent(reporterName) }` }</Text>
+        <Text>{ `Attended At: ${ represent(attendedAt) }` }</Text>
         { addedActivityId === undefined
           ? null
           : (
             <Text
               style={ { color: !addedActivityId ? Colours.RED_VENETIAN : Colours.GREEN_ZELYONY } }
             >
-              { !!addedActivityId ? "Apartment created successfully" : "Apartment not saved" }
+              { !!addedActivityId ? "Activity created successfully" : "Activity not saved" }
             </Text>
           ) }
       </View>
@@ -89,29 +94,20 @@ export default function NewActivityConfirmationScreen({ route, navigation }
           renderItem={ ({ item }) => (
             <Text style={ { fontSize: 14, color: Colors.red30 } }>{ item }</Text>
           ) }
-          keyExtractor={ (msg, i) => (hashString(msg) + i).toString() }
+          keyExtractor={ (msg, i) => ( hashString(msg) + i ).toString() }
         />
       </View>
     )
   }
 }
 
-function saveNewActivityToDb(db: WebSQLDatabase, activityEntity: Activity) {
-  const addedActivityId = addNewActivity(db, activityEntity);
 
-  if (!addedActivityId) {
-    console.error("Failed to add this activity to the database.");
-  }
-
-  return addedActivityId;
-}
-
-function toString(value: string | Date | undefined) {
+function represent(value: string | Date | undefined) {
   if (!value) {
     return "<N/A>";
   }
   if (value instanceof Date) {
-    return formatISO(value as Date);
+    return toString(value as Date);
   }
   return value.toString();
 }

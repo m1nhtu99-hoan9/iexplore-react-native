@@ -5,7 +5,7 @@ import { FormikHelpers, useFormik } from "formik";
 import { AntDesign } from "@expo/vector-icons";
 import * as R from "ramda";
 
-import { ActivityEntity } from "../domain";
+import { ActivityModel } from "../domain";
 import { Activity } from "../domain/Activity.d";
 import { normaliseSizeHorizontal, StatusBarHeight } from "../helpers/responsitivity";
 import { DATE_FORMAT, TIME_FORMAT } from "../appSettings";
@@ -14,14 +14,14 @@ import { Colours, ScreenNames } from "../constants";
 
 // HACK: to suppress a warning thrown by `react-navigation` to warn against
 // navigation action params having too many nested object level.
-LogBox.ignoreLogs(["Warning: Non-serializable values were found in the navigation state"]);
+LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
 
 export default function NewActivityScreen({ route, navigation }: ScreenProps<NewActivityRouteName>) {
   const formik = useFormik({
-    validationSchema: ActivityEntity.validationSchema,
-    initialValues: ActivityEntity.getDefault() as Activity,
+    validationSchema: ActivityModel.validationSchema,
+    initialValues: ActivityModel.getDefault() as Activity,
     onSubmit(values: Activity, _) {
-      console.debug("Submission data: ");
+      console.debug("[NewActivityScreen] Submission data: ");
       console.debug(values);
     },
   });
