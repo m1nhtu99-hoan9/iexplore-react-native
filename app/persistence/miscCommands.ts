@@ -2,7 +2,6 @@ import { executeSingleSqlCommand } from "./__internal__";
 import { SQLError, WebSQLDatabase } from "expo-sqlite";
 
 export async function execInitDbTablesAsync(db: WebSQLDatabase) {
-  console.debug("Creating tables if not existed yet...");
   return await executeSingleSqlCommand(db,
     `CREATE TABLE IF NOT EXISTS "activity"
      (

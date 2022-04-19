@@ -60,6 +60,8 @@ export default function NewActivityConfirmationScreen({ route, navigation }
     </View>
   );
 
+  //#region internal functional components
+
   function SucceededContent(props: { payload: Activity }) {
     const { name, location, date, attendedAt, reporterName } = props.payload;
 
@@ -97,8 +99,10 @@ export default function NewActivityConfirmationScreen({ route, navigation }
           keyExtractor={ (msg, i) => ( hashString(msg) + i ).toString() }
         />
       </View>
-    )
+    );
   }
+
+  //#endregion
 }
 
 

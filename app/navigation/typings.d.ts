@@ -1,6 +1,6 @@
 import { ParamListBase, RouteProp } from "@react-navigation/native";
-import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Activity } from "../domain/Activity";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Activity, ActivityDbItem } from "../domain/Activity";
 
 export type ValidationStatus = 'SUCCEEDED' | 'WARNING';
 export type ErrorMessage = string;
@@ -8,6 +8,8 @@ export type ErrorMessage = string;
 export type HomeRouteName = keyof RootStackParamList  & "Home";
 export type NewActivityRouteName = keyof RootStackParamList & "NewActivity";
 export type NewActivityConfirmationRouteName = keyof RootStackParamList & "NewActivityConfirmation";
+export type EditActivityRouteName = keyof RootStackParamList & "EditActivity";
+export type ActivityInfoRouteName = keyof RootStackParamList & "ActivityInfo";
 
 export type RootStackParamList = ParamListBase & {
   Home: undefined,
@@ -15,6 +17,12 @@ export type RootStackParamList = ParamListBase & {
   NewActivityConfirmation: {
     payload: Activity | ErrorMessage[],
     status: ValidationStatus
+  },
+  EditActivity: {
+    payload: ActivityDbItem
+  },
+  ActivityInfo: {
+    payload: ActivityDbItem
   }
 }
 

@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { ListRenderItemInfo } from "react-native";
 import { View } from "react-native-ui-lib";
 import { FlatList } from "react-native-gesture-handler";
 import * as R from "ramda";
@@ -16,35 +17,26 @@ export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteN
   const activityDbService = useActivityDbServiceContext() as ActivityDbService;
   const [ activities, setActivities ] = useState(activityDbService.activities);
 
+  // triggered at the first load
+  useEffect(() => {
+    setActivities(activityDbService.activities);
+  });
+
   useEffect(() => {
     console.debug("[HomeScreen.useEffect] entered.");
 
     navigation.setOptions({ title: `ALL ACTIVITIES (${ activities.length })` });
   }, [ navigation, activities ]);
 
-  function onActivityDeleteBtnPressed(activityId: number) {
-    return () => {
-      activityDbService.delete(activityId)
-        .then(isOk => {
-          if (isOk) {
-            setActivities(activityDbService.activities);
-          }
-        })
-        .catch(e => {
-          console.error(`[HomeScreen.onActivityDeleteBtnPressed] Delete action failed to be completed. Error:\n${ e.message }`);
-        });
-    }
-  }
-
   return (
     <View flex>
       <FlatList
         data={ activityDbService.activities }
-        renderItem={ ({ item }) => (
+        renderItem={ ({ item }: ListRenderItemInfo<ActivityDbItem>) => (
           <ActivityEntityCardItem
             item={ item }
-            onMoreBtnPressed={ () => console.log("Not implemented yet.") }
-            onEditBtnPressed={ () => console.log("To be implemented.") }
+            onMoreBtnPressed={ onActivityMoreBtnPressed(item) }
+            onEditBtnPressed={ onActivityEditBtnPressed(item) }
             onDeleteBtnPressed={ onActivityDeleteBtnPressed(item.activityId) }
           />
         ) }
@@ -57,4 +49,34 @@ export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteN
       />
     </View>
   );
+
+  //#region internal functions
+
+  function onActivityEditBtnPressed(activity: ActivityDbItem) {
+    return () => {
+      navigation.push(ScreenNames.EditActivity, { payload: activity });
+    };
+  }
+
+  function onActivityMoreBtnPressed(activity: ActivityDbItem) {
+    return () => {
+      navigation.push(ScreenNames.ActivityInfo, { payload: activity });
+    };
+  }
+
+  function onActivityDeleteBtnPressed(activityId: number) {
+    return () => {
+      activityDbService.delete(activityId)
+        .then(isOk => {
+          if (isOk) {
+            setActivities(activityDbService.activities);
+          }
+        })
+        .catch(e => {
+          console.error(`[HomeScreen.onActivityDeleteBtnPressed] Deleting action failed to be completed. Error:\n${ e.message }`);
+        });
+    };
+  }
+
+  //#endregion
 }

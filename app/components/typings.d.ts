@@ -12,10 +12,6 @@ interface ActivityEntityCardItemProps {
   onDeleteBtnPressed: () => void,
 }
 
-interface ActivityEntityCardListProps {
-  items: ActivityDbItem[]
-}
-
 interface DbConnectionProviderProps {
   children: React.ReactNode
 }
@@ -30,9 +26,9 @@ type FloatingPlusButtonProps = {
 
 type SwipableCardProps = {
   children: ReactNode,
-  onMore: () => void,
-  onMarked: () => void,
-  onDeleted: () => void,
+  onMorePressed: () => void,
+  onEditPressed: () => void,
+  onDeletePressed: () => void,
   hasRightActions: boolean,
 };
 

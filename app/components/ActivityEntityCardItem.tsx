@@ -9,7 +9,7 @@ import { Colours } from "../constants";
 import { ActivityEntityCardItemProps } from "./typings";
 import { Activity } from "../domain/Activity.d";
 import { toString } from "../helpers/dateTimeUtils";
-import { normalise } from "../helpers/responsitivity";
+import { normalise, normaliseSizeVertical } from "../helpers/responsitivity";
 
 
 export default function ActivityEntityCardItem({ item, onEditBtnPressed, onMoreBtnPressed, onDeleteBtnPressed }
@@ -19,9 +19,9 @@ export default function ActivityEntityCardItem({ item, onEditBtnPressed, onMoreB
   return (
     <SwipableCard
       hasRightActions={ true }
-      onMore={ onMoreBtnPressed }
-      onMarked={ onEditBtnPressed }
-      onDeleted={ onDeleteBtnPressed }
+      onMorePressed={ onMoreBtnPressed }
+      onEditPressed={ onEditBtnPressed }
+      onDeletePressed={ onDeleteBtnPressed }
     >
       <RectButton
         style={ styles.container }
@@ -75,8 +75,9 @@ const styles = StyleSheet.create({
     elevation: 5
   },
   contentTxt: {
-    paddingLeft: 2 + '%',
-    marginRight: 80,
+    marginTop: normaliseSizeVertical(18),
+    marginLeft: 1 + '%',
+    marginRight: 1 + '%',
     fontSize: normalise(18),
     color: Colours.GREEN_ZELYONY,
     fontWeight: 'bold',
@@ -84,8 +85,8 @@ const styles = StyleSheet.create({
   },
   subContentTxt: {
     position: 'absolute',
+    top: normaliseSizeVertical(5),
     right: 2 + '%',
-    top: 0,
     fontWeight: 'bold',
     backgroundColor: 'transparent',
   }

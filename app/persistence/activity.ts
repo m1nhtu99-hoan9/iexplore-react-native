@@ -28,7 +28,7 @@ export async function addNewActivityAsync(db: WebSQLDatabase, entity: Activity):
   const valuesLiteral = [ name, location, date, attendedAt, reporterName ].map(toSqlText).join(", ");
   const sqlCmd = `INSERT INTO activity (name, location, date, attended_at, reporter_name)
                   VALUES (${ valuesLiteral })`;
-  console.debug(`Executing: ${ sqlCmd }`);
+  console.debug(`[addNewActivityAsync] Executing: ${ sqlCmd }`);
 
   const { insertId } = await executeSingleSqlCommand(db, sqlCmd);
   return insertId;
@@ -45,6 +45,7 @@ export async function updateActivityAsync(db: WebSQLDatabase, activityId: number
   const sqlCmd = `UPDATE activity
                   SET ${ valuesLiteral }
                   WHERE id = ${ activityId }`;
+  console.debug(`[updateActivityAsync] Executing: ${ sqlCmd }`);
 
   const { rowsAffected } = await executeSingleSqlCommand(db, sqlCmd);
   return rowsAffected > 0;
@@ -55,7 +56,7 @@ export async function deleteActivityAsync(db: WebSQLDatabase, activityId: number
                   FROM activity
                   WHERE id = ?`;
 
-  const { rowsAffected } = await executeSingleSqlCommand(db, sqlCmd, [activityId]);
+  const { rowsAffected } = await executeSingleSqlCommand(db, sqlCmd, [ activityId ]);
   return rowsAffected > 0;
 }
 

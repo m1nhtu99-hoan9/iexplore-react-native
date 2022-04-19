@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { AddNewActivityStackNavigator } from "./stackNavigators";
+import { ActivityStackNavigator } from "./stackNavigators";
 import { ScreenNames } from '../constants';
 
 export default function AppNavigationContainer() {
   return (
     <NavigationContainer>
-      <AddNewActivityStackNavigator
+      <ActivityStackNavigator
         initialRouteName={ScreenNames.Home}
       />
     </NavigationContainer>

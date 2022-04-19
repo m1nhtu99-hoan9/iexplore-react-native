@@ -5,13 +5,13 @@ import { NativeStackNavigatorProps } from "react-native-screens/lib/typescript/n
 import { RouteProp } from '@react-navigation/native';
 
 import { ScreenNames } from "../constants";
-import { HomeScreen, NewActivityScreen, NewActivityConfirmationScreen } from "../screens";
+import { HomeScreen, NewActivityScreen, NewActivityConfirmationScreen, EditActivityScreen, ActivityInfoScreen } from "../screens";
 import { NewActivityConfirmationRouteName, RootStackParamList } from './typings';
 
 enableScreens()
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export function AddNewActivityStackNavigator(props: Partial<NativeStackNavigatorProps>) {
+export function ActivityStackNavigator(props: Partial<NativeStackNavigatorProps>) {
   return (
     <Stack.Navigator { ...props }>
       <Stack.Screen name={ ScreenNames.Home }
@@ -24,6 +24,14 @@ export function AddNewActivityStackNavigator(props: Partial<NativeStackNavigator
       <Stack.Screen name={ ScreenNames.NewActivityConfirmation }
                     component={ NewActivityConfirmationScreen }
                     options={({ route }) => createConfirmationScreenOptions(route)}
+                    />
+      <Stack.Screen name={ ScreenNames.EditActivity }
+                    component={ EditActivityScreen }
+                    options={{ title: "Edit Activity"}}
+                    />
+      <Stack.Screen name={ ScreenNames.ActivityInfo }
+                    component={ ActivityInfoScreen }
+                    options={{ title: "Activity Details "}}
                     />
     </Stack.Navigator>
   );

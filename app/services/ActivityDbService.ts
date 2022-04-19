@@ -46,7 +46,6 @@ export default class ActivityDbService {
   }
 
   public async update(id: number, modifiedActivity: Activity): Promise<boolean> {
-
     const isSucceed = await updateActivityAsync(this.db, id, modifiedActivity);
 
     if (isSucceed) {

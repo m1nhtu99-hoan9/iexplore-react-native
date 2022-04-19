@@ -1,28 +1,50 @@
 import React from "react";
 import { ImageStyle, ScrollView, StyleProp, StyleSheet, LogBox } from 'react-native';
 import { Button, Colors, Constants, DateTimePicker, Text, TextField, View, Incubator } from "react-native-ui-lib";
-import { FormikHelpers, useFormik } from "formik";
+import { useFormik } from "formik";
 import { AntDesign } from "@expo/vector-icons";
-import * as R from "ramda";
 
 import { ActivityModel } from "../domain";
 import { Activity } from "../domain/Activity.d";
 import { normaliseSizeHorizontal, StatusBarHeight } from "../helpers/responsitivity";
-import { DATE_FORMAT, TIME_FORMAT } from "../appSettings";
-import { ErrorMessage, NewActivityRouteName, ScreenProps } from "../navigation/typings";
+import { DATE_FORMAT } from "../appSettings";
+import { EditActivityRouteName, ScreenProps } from "../navigation/typings";
 import { Colours, ScreenNames } from "../constants";
+import { useActivityDbServiceContext } from "../context/activityDbServiceContext";
+import { ActivityDbService } from "../services";
 
 // HACK: to suppress a warning thrown by `react-navigation` to warn against
 // navigation action params having too many nested object level.
 LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
 
-export default function NewActivityScreen({ route, navigation }: ScreenProps<NewActivityRouteName>) {
+export default function EditActivityScreen({ route, navigation }: ScreenProps<EditActivityRouteName>) {
+  const activityDbService = useActivityDbServiceContext() as ActivityDbService;
+  const { payload } = route.params;
+
   const formik = useFormik({
     validationSchema: ActivityModel.validationSchema,
-    initialValues: ActivityModel.getDefault() as Activity,
+    initialValues: payload,
     onSubmit(values: Activity, _) {
-      console.debug("[NewActivityScreen] Submission data: ");
+      console.debug("[EditActivityScreen] Submission data: ");
       console.debug(values);
+
+      activityDbService.update(payload.activityId, values)
+        .then(updated => {
+          if (updated) {
+            console.debug("[EditActivityScreen] Changes saved to the database successfully.");
+
+            navigation.reset({
+              index: 0,
+              routes: [ {
+                name: ScreenNames.Home
+              }]
+            });
+          }
+        })
+        .catch(e => {
+          e.message = `[EditActivityScreen] Error occurred while processing database update:\n${e.message}`;
+          throw e;
+        });
     },
   });
 
@@ -31,20 +53,12 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
     errors, isValid, handleSubmit, handleReset
   } = formik;
 
-  function onSubmitBtnPressed() {
-    const errorMessages = R.pipe(R.values, R.reject(R.not))(errors) as ErrorMessage[];
-    navigation.push(ScreenNames.NewActivityConfirmation,
-      R.length(errorMessages) !== 0
-        ? ({ payload: errorMessages, status: 'WARNING' })
-        : ({ payload: values as Activity, status: 'SUCCEEDED' }));
-  }
-
   return (
     <View flex style={ { backgroundColor: Colors.white } }>
       <ScrollView
         keyboardShouldPersistTaps="always"
         style={ styles.container }
-        contentContainerStyle={ styles.containerContent }
+        contentContainerStyle={ { padding: 1 + '%', flexGrow: 1 } }
         keyboardDismissMode='on-drag'
       >
         <View style={ { height: 20 + '%' } }
@@ -73,7 +87,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
             enableErrors
             validationMessagePosition={ Incubator.TextField.validationMessagePositions.BOTTOM }
             validationMessage={ errors.location }
-            value={ values.location ?? undefined }
+            value={ values.location }
             onChangeText={ handleChange('location') }
             onBlur={ handleBlur('location') }
             fieldStyle={ styles.textAreaUnderline }
@@ -95,7 +109,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
           />
           <Text style={ styles.dateTimeErrorTextArea }>{ errors.date ?? '' }</Text>
         </View>
-        <View key="activity-attended-datepicker-wrapper"
+        <View flex key="activity-attended-datepicker-wrapper"
               style={ { height: 20 + '%', marginBottom: StatusBarHeight, justifyContent: 'flex-start' } }
         >
           <DateTimePicker
@@ -113,7 +127,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
           <Text style={ styles.dateTimeErrorTextArea }>{ errors.attendedAt ?? '' }</Text>
         </View>
         <View style={ { height: 20 + '%' } }
-              key="activity-reporter-name-text-area-wrapper">
+              key="activity-report-name-text-area-wrapper">
           <Incubator.TextField
             placeholder="Reporter's name (*)"
             floatingPlaceholderStyle={ styles.textAreaFloatingPlaceholder }
@@ -147,7 +161,6 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
           label=' CONFIRM'
           onPress={ (e) => {
             handleSubmit(e);
-            onSubmitBtnPressed();
           } }
           backgroundColor={ Colors.blue50 }
           iconSource={ (iconStyles: StyleProp<ImageStyle>) => (
