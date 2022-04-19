@@ -1,31 +1,19 @@
 import { executeSingleSqlCommand } from "./__internal__";
 import { SQLError, WebSQLDatabase } from "expo-sqlite";
 
-export function execInitDbTables(db: WebSQLDatabase) {
-  let isOk = false;
-
-  function handleError(_: SQLError) {
-    isOk = false;
-    return true;
-  }
-
-  function handleResult(_0: number, _1?: number) {
-    isOk = true;
-  }
-
-  executeSingleSqlCommand(db, `CREATE TABLE IF N0T EXISTS "activity"
-                               (
-                                   "id"            INTEGER NOT NULL UNIQUE,
-                                   "name"          TEXT    NOT NULL,
-                                   "location"      TEXT,
-                                   "date"          TEXT    NOT NULL,
-                                   "attended_at"   TEXT,
-                                   "reporter_name" TEXT    NOT NULL,
-                                   PRIMARY KEY ("id")
-                               )`,
-  { handleError, handleResult },
+export async function execInitDbTablesAsync(db: WebSQLDatabase) {
+  console.debug("Creating tables if not existed yet...");
+  return await executeSingleSqlCommand(db,
+    `CREATE TABLE IF NOT EXISTS "activity"
+     (
+         "id"            INTEGER,
+         "name"          TEXT NOT NULL,
+         "location"      TEXT,
+         "date"          TEXT NOT NULL,
+         "attended_at"   TEXT,
+         "reporter_name" TEXT NOT NULL,
+         PRIMARY KEY ("id" AUTOINCREMENT)
+     );`
   );
-
-  return isOk;
 }
 

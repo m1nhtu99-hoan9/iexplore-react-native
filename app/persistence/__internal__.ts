@@ -1,103 +1,64 @@
-import { WebSQLDatabase, SQLTransaction } from "expo-sqlite";
-import {
-  ExecuteSqlQueryBasicOptions, ExecuteSqlQueryOptions,
-  ExecuteSqlCommandBasicOptions, ExecuteSqlCommandOptions
-} from "./typings";
+import { WebSQLDatabase, SQLTransaction, ResultSet, ResultSetError } from "expo-sqlite";
+import { append, concat, isEmpty, has, length, reduce } from "ramda";
+import { DbEntity, SqlCommandResult } from "./typings";
 
 
 export function executeSingleSqlQuery(db: WebSQLDatabase,
                                       rawSql: string,
-                                      opts?: ExecuteSqlQueryBasicOptions) {
+                                      sqlArgs: ( number | string )[] = []): Promise<DbEntity[]> {
   if (!db) {
     throw new TypeError("'db' is expected to be a WebSQLDatabase instance.");
   }
 
-  db.transaction(tn => {
-    executeSqlQuery(tn, rawSql, fromQueryBasicOptions(opts));
+  return new Promise((resolve, reject) => {
+    db.exec([ { sql: rawSql, args: sqlArgs } ], true,
+      (error, results) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        if (results === undefined) {
+          resolve([]);
+          return;
+        }
+
+        const resultCategory = reduce(
+          (acc, x) =>
+            has('error', x)
+            ? ( { ...acc, errors: append(x.error, acc.errors) } )
+            : ( { ...acc, resultRows: concat(x.rows, acc.resultRows) } ),
+          ( { errors: [] as Error[], resultRows: [] as DbEntity[] } ),
+          results
+        );
+        console.debug(`[_.executeSingleSqlQuery] Result analysis: ${ JSON.stringify(resultCategory) }`);
+
+        if (resultCategory.errors.length !== 0) {
+          reject(new Error(`SQL error(s): ${ resultCategory.errors.map(_ => _.message).join(', ') }`));
+          return;
+        }
+
+        resolve(resultCategory.resultRows);
+      })
   });
 }
 
 export function executeSingleSqlCommand(db: WebSQLDatabase,
                                         rawSql: string,
-                                        opts?: ExecuteSqlCommandBasicOptions) {
+                                        sqlArgs: ( number | string )[] = []): Promise<SqlCommandResult> {
   if (!db) {
     throw new TypeError("'db' is expected to be a WebSQLDatabase instance.");
   }
 
-  db.transaction(tn => {
-    executeSqlQuery(tn, rawSql, fromCommandBasicOptions(opts));
+  return new Promise((resolve, reject) => {
+    db.transaction(tn => tn.executeSql(rawSql, sqlArgs,
+      (thisTn, { insertId, rowsAffected }) => {
+        console.debug(`[_.executeSingleSqlCommand] Inserted ID = ${ insertId }; No. Affected Rows = ${ rowsAffected }`);
+        resolve({ rowsAffected, insertId });
+      },
+      (thisTn, sqlError) => {
+        reject(sqlError);
+        return true;
+      }));
   });
-}
-
-export function executeSqlQuery(transaction: SQLTransaction,
-                                rawSql: string,
-                                opts?: ExecuteSqlQueryOptions) {
-  if (!transaction) {
-    throw new TypeError("'transaction' is expected to be a SQLTransaction instance.");
-  }
-
-  if (!opts) {
-    transaction.executeSql(rawSql);
-    return;
-  }
-
-  const { sqlArgs, handleResult, handleError } = opts;
-  transaction.executeSql(rawSql, sqlArgs ?? [],
-    (thisTn, { rows: { _array } }) => {
-      handleResult?.(thisTn)(_array);
-    },
-    (thisTn, sqlError) => {
-      return handleError?.(thisTn)(sqlError) ?? false;
-    });
-}
-
-export function executeSqlCommand(transaction: SQLTransaction,
-                                  rawSql: string,
-                                  opts?: ExecuteSqlCommandOptions) {
-
-  if (!transaction) {
-    throw new TypeError("'transaction' is expected to be a SQLTransaction instance.");
-  }
-
-  if (!opts) {
-    transaction.executeSql(rawSql);
-    return;
-  }
-
-  const { sqlArgs, handleResult, handleError } = opts;
-  transaction.executeSql(rawSql, sqlArgs ?? [],
-    (thisTn, { insertId, rowsAffected }) => {
-      handleResult?.(thisTn)(rowsAffected, insertId);
-    },
-    (thisTn, sqlError) => {
-      return handleError?.(thisTn)(sqlError) ?? false;
-    });
-}
-
-function fromQueryBasicOptions(opts?: ExecuteSqlQueryBasicOptions) : ExecuteSqlQueryOptions | undefined {
-  if (!opts) {
-    return undefined;
-  }
-
-  const { sqlArgs, handleResult, handleError } = opts;
-
-  return {
-    sqlArgs,
-    handleResult: handleResult && (_ => handleResult),
-    handleError: handleError && (_ => handleError)
-  }
-}
-
-function fromCommandBasicOptions(opts?: ExecuteSqlCommandBasicOptions) : ExecuteSqlCommandOptions | undefined {
-  if (!opts) {
-    return undefined;
-  }
-
-  const { sqlArgs, handleResult, handleError } = opts;
-
-  return {
-    sqlArgs,
-    handleResult: handleResult && (_ => handleResult),
-    handleError: handleError && (_ => handleError)
-  }
 }
