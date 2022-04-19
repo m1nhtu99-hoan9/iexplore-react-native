@@ -1,5 +1,5 @@
-import * as ActivityEntity from "./Activity";
+import * as ActivityModel from "./Activity";
 
 export {
-  ActivityEntity
+  ActivityModel
 }

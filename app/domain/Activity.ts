@@ -2,6 +2,8 @@ import * as yup from "yup";
 import { ValidationError } from "yup";
 
 import { Activity } from "./Activity.d";
+import { hashArray } from "react-hash-string";
+import { toString } from "../helpers/dateTimeUtils";
 
 
 export function getDefault() {
@@ -42,6 +44,28 @@ export const validationSchema = yup.object()
       .required("Reporter's name is required"),
   })
 ;
+
+
+export function getHash(activity: Activity) {
+  if (!activity) {
+    return undefined;
+  }
+
+  try {
+    return hashArray([ activity.name, toString(activity.date) ]);
+  }
+  catch (err) {
+    const newErr = err.constructor(`Unable to hash (${JSON.stringify(activity)}). Inner error:\n${err.message}`);
+    if (err.stack) {
+      newErr.stack = err.stack;
+    }
+    if (err.code) {
+      newErr.code = err.code;
+    }
+
+    throw newErr;
+  }
+}
 
 
 /**
