@@ -22,6 +22,7 @@
     "expo-sqlite-orm": "^1.5.6",
     "expo-status-bar": "~1.1.0",
     "formik": "2.2.9",
+    "ramda": "0.27.1",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-hash-string": "^1.0.0",
@@ -39,7 +40,6 @@
     "@types/ramda": "0.27.50",
     "@types/react": "17.0.35",
     "@types/react-native": "0.64.19",
-    "ramda": "0.27.1",
     "typescript": "~4.3.5"
   },
   "private": true
