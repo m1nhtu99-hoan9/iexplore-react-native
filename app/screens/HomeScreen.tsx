@@ -1,37 +1,56 @@
 import React, { useEffect, useState } from "react";
-import { ListRenderItemInfo } from "react-native";
+import { ListRenderItemInfo, Platform, StyleSheet } from "react-native";
 import { View } from "react-native-ui-lib";
+import { Divider, SearchBar } from "react-native-elements";
 import { FlatList } from "react-native-gesture-handler";
-import * as R from "ramda";
 
-import { HomeRouteName, ScreenProps } from "../navigation/typings";
 import { ActivityEntityCardItem, FloatingPlusButton } from "../components";
-import { ScreenNames } from "../constants";
+import { Colours, ScreenNames } from "../constants";
 import { ActivityModel } from "../domain";
 import { useActivityDbServiceContext } from "../context/activityDbServiceContext";
-import { ActivityDbService } from "../services";
+
+import { HomeRouteName, ScreenProps } from "../navigation/typings";
+import { IActivityDbService } from "../services/typings";
 import { ActivityDbItem } from "../domain/Activity.d";
 
 
 export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteName>) {
-  const activityDbService = useActivityDbServiceContext() as ActivityDbService;
-  const [ activities, setActivities ] = useState(activityDbService.activities);
+  const activityDbService = useActivityDbServiceContext() as IActivityDbService;
+  const [ activities, setActivities ] = useState<readonly ActivityDbItem[]>([]);
+
+  const [ searchPhrase, setSearchPhrase ] = useState("");
 
   // triggered at the first load
   useEffect(() => {
     setActivities(activityDbService.activities);
-  });
+  }, []);
 
   useEffect(() => {
-    console.debug("[HomeScreen.useEffect] entered.");
-
     navigation.setOptions({ title: `ALL ACTIVITIES (${ activities.length })` });
   }, [ navigation, activities ]);
 
+  useEffect(() => {
+    activityDbService.filter(searchPhrase)
+      .then(results => {
+        setActivities(results);
+      });
+  }, [ searchPhrase ]);
+
   return (
     <View flex>
+      {/* @ts-ignore HACK: bypass `react-native-elements` misleading type declarations */ }
+      <SearchBar
+        platform={ Platform.select({ ios: "ios", android: "android", default: "default" }) }
+        containerStyle={ styles.searchBarContainer }
+        placeholder="Search by keyword"
+        value={ searchPhrase }
+        round={ true }
+        /* @ts-ignore HACK: bypass `react-native-elements` misleading type declarations */
+        onChangeText={ (text) => setSearchPhrase(text) }
+        onClear={ () => setActivities(activityDbService.activities) }
+      />
       <FlatList
-        data={ activityDbService.activities }
+        data={ activities }
         renderItem={ ({ item }: ListRenderItemInfo<ActivityDbItem>) => (
           <ActivityEntityCardItem
             item={ item }
@@ -43,6 +62,9 @@ export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteN
         keyExtractor={ (item: ActivityDbItem) => {
           return `${ item.activityId }_${ ActivityModel.getHash(item) }`;
         } }
+        ItemSeparatorComponent={ _ => (
+          <Divider orientation='horizontal' color={ Colours.DEEP_VIOLET } width={ 0.5 }/>
+        ) }
       />
       <FloatingPlusButton
         onPressed={ () => navigation.push(ScreenNames.NewActivity) }
@@ -80,3 +102,13 @@ export default function HomeScreen({ navigation, route }: ScreenProps<HomeRouteN
 
   //#endregion
 }
+
+const styles = StyleSheet.create({
+  searchBarContainer: {
+    marginVertical: 1 + '%',
+    marginHorizontal: 0.5 + '%',
+     borderColor: Colours.DEEP_VIOLET,
+    borderWidth: 2,
+    borderRadius: 10
+  }
+})

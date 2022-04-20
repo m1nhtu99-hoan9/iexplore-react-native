@@ -10,8 +10,9 @@ import {
   updateActivityAsync
 } from "../persistence";
 import { deleteAllActivitiesAsync } from "../persistence/activity";
+import { IActivityDbService } from "./typings";
 
-export default class ActivityDbService {
+export default class ActivityDbService implements IActivityDbService {
   private _activities: Readonly<ActivityDbItem[]> = [];
 
   constructor(private readonly db: WebSQLDatabase) {
@@ -19,15 +20,40 @@ export default class ActivityDbService {
     queryAllActivitiesAsync(db)
       .then(xs => {
         this._activities = xs;
-        console.debug(`[ActivityDbService.ctor] 'activities' initiated: ${ JSON.stringify(this._activities) }`)
+        console.debug(`[ActivityDbService.ctor] 'activities' initiated: ${ JSON.stringify(this._activities) }\n`)
       });
   }
 
-  public get activities(): Readonly<ActivityDbItem[]> {
+  public get activities() {
     return this._activities;
   }
 
-  public async add(newActivity: Activity): Promise<number | undefined> {
+  public async filter(searchPhrase: string) {
+    const normalisedSearchPhrase = searchPhrase?.toLowerCase();
+
+    return new Promise<readonly ActivityDbItem[]>((resolve, reject) => {
+      try {
+        if (R.isNil(normalisedSearchPhrase) || R.isEmpty(normalisedSearchPhrase.trim())) {
+          resolve(this.activities);
+          return;
+        }
+
+        const filteredActivities = R.filter<ActivityDbItem>(
+          x => x.name.toLowerCase().includes(normalisedSearchPhrase)
+            || x.reporterName.toLowerCase().includes(normalisedSearchPhrase)
+            || !R.isNil(x.location) && x.location.toLowerCase().includes(normalisedSearchPhrase)
+        )(this._activities);
+
+        console.debug(`[ActivityDbService.filter] Filtered activities: ${JSON.stringify(filteredActivities)}\n`);
+
+        resolve(filteredActivities);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  public async add(newActivity: Activity) {
     console.debug(`[ActivityDbService.add] entered with: newActivity = ${ JSON.stringify(newActivity) }`)
     const addedActivityId = await addNewActivityAsync(this.db, newActivity)
 
@@ -45,7 +71,7 @@ export default class ActivityDbService {
     return addedActivityId;
   }
 
-  public async update(id: number, modifiedActivity: Activity): Promise<boolean> {
+  public async update(id: number, modifiedActivity: Activity) {
     const isSucceed = await updateActivityAsync(this.db, id, modifiedActivity);
 
     if (isSucceed) {
@@ -61,7 +87,7 @@ export default class ActivityDbService {
     return isSucceed;
   }
 
-  public async delete(id: number): Promise<boolean> {
+  public async delete(id: number) {
     const isSucceed = await deleteActivityAsync(this.db, id);
 
     if (isSucceed) {
@@ -75,7 +101,7 @@ export default class ActivityDbService {
     return isSucceed;
   }
 
-  public async deleteAll(): Promise<number> {
+  public async deleteAll() {
     const rowsAffected = await deleteAllActivitiesAsync(this.db);
     console.assert(rowsAffected === R.length(this._activities));
 

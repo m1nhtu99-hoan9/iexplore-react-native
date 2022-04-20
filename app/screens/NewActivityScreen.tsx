@@ -14,7 +14,7 @@ import { Colours, ScreenNames } from "../constants";
 
 // HACK: to suppress a warning thrown by `react-navigation` to warn against
 // navigation action params having too many nested object level.
-LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
+LogBox.ignoreLogs([ "Non-serializable values were found in the navigation state" ]);
 
 export default function NewActivityScreen({ route, navigation }: ScreenProps<NewActivityRouteName>) {
   const formik = useFormik({
@@ -35,8 +35,8 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
     const errorMessages = R.pipe(R.values, R.reject(R.not))(errors) as ErrorMessage[];
     navigation.push(ScreenNames.NewActivityConfirmation,
       R.length(errorMessages) !== 0
-        ? ({ payload: errorMessages, status: 'WARNING' })
-        : ({ payload: values as Activity, status: 'SUCCEEDED' }));
+      ? ( { payload: errorMessages, status: 'WARNING' } )
+      : ( { payload: ActivityModel.consolidate(values as Activity), status: 'SUCCEEDED' } ));
   }
 
   return (

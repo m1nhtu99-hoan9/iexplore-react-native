@@ -1,5 +1,6 @@
 import * as yup from "yup";
 import { ValidationError } from "yup";
+import { isNil } from "ramda";
 
 import { Activity } from "./Activity.d";
 import { hashArray } from "react-hash-string";
@@ -88,9 +89,15 @@ export async function fromAsync(value: object) {
 }
 
 
-function consolidate(activityObj: Activity) {
+export function consolidate(activityObj: Activity) {
   if (!activityObj.attendedAt) {
     activityObj.attendedAt = activityObj.date;
+  }
+
+  activityObj.name = activityObj.name.trim();
+  activityObj.reporterName = activityObj.reporterName.trim();
+  if (!isNil(activityObj.location)) {
+    activityObj.location = activityObj.location.trim();
   }
 
   return activityObj;

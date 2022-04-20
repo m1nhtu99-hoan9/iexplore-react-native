@@ -28,7 +28,11 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
       console.debug("[EditActivityScreen] Submission data: ");
       console.debug(values);
 
-      activityDbService.update(payload.activityId, values)
+      const consolidatedActivity = ActivityModel.consolidate(values);
+      console.debug("[EditActivityScreen] After consolidation: ");
+      console.debug(consolidatedActivity);
+
+      activityDbService.update(payload.activityId, consolidatedActivity)
         .then(updated => {
           if (updated) {
             console.debug("[EditActivityScreen] Changes saved to the database successfully.");
