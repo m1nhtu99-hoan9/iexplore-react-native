@@ -1,23 +1,20 @@
 import * as yup from "yup";
 import { ValidationError } from "yup";
 import { isNil } from "ramda";
+import { hashArray } from "react-hash-string";
 
 import { Activity } from "./Activity.d";
-import { hashArray } from "react-hash-string";
-import { toString } from "../helpers/dateTimeUtils";
+import { extractDateOnly, toString } from "../helpers/dateTimeUtils";
 
 
 export function getDefault() {
-  const activityObj = {
+  return {
     name: "Activity Name",
     location: undefined,
-    date: new Date(),
-    attendedAt: undefined as Date | undefined,
+    date: extractDateOnly(),
+    time: undefined,
     reporterName: "John Doe"
   };
-  activityObj.attendedAt = activityObj.date;
-
-  return activityObj;
 }
 
 
@@ -28,23 +25,25 @@ export const validationSchema = yup.object()
         "Activity name must be in a single line and contain at least 3 characters. "
         + "Characters allowed: (A-Z), (a-z), (0-9), (&), (#), (!), ($), (,), (.)")
       .required("Activity name is required"),
-    // where the activity have been held
+    // where the activity is held
     location: yup.string()
-      .optional(),
-    // when the activity will be held
+      .optional(),  // allows `undefined`
+    // date when the activity is held
     date: yup.date()
-      .default(() => new Date())
+      .default(() => extractDateOnly())
       .required(),
     // time of attending
-    attendedAt: yup.date()
+    time: yup.date()
       .optional(),  // allows `undefined`
+    // reporter's name
     reporterName: yup.string()
       .matches(/^[a-zA-Z0-9\'\,\.\,\ ]{3,}$/,
         "Reporter's name must be in a single line and contain at least 3 characters. "
         + "Characters allowed: (A-Z), (a-z), (0-9), ('), (,), (.)")
       .required("Reporter's name is required"),
+    // content of the reporter's report
+    reportContent: yup.string().optional()
   })
-;
 
 
 export function getHash(activity: Activity) {
@@ -90,14 +89,17 @@ export async function fromAsync(value: object) {
 
 
 export function consolidate(activityObj: Activity) {
-  if (!activityObj.attendedAt) {
-    activityObj.attendedAt = activityObj.date;
-  }
-
+  // assigned with get the empty `TimeOnly`
+  activityObj.time = extractDateOnly();
+  console.debug(`[ActivityModel.consolidate] .time = ${activityObj.time}`);
   activityObj.name = activityObj.name.trim();
   activityObj.reporterName = activityObj.reporterName.trim();
+
   if (!isNil(activityObj.location)) {
     activityObj.location = activityObj.location.trim();
+  }
+  if (!isNil(activityObj.reportContent)) {
+    activityObj.reportContent = activityObj.reportContent.trim();
   }
 
   return activityObj;

@@ -1,17 +1,19 @@
 import React from "react";
 import { ScrollView, StyleSheet } from 'react-native';
 import { Text, View } from "react-native-ui-lib";
+import { isNil } from "ramda";
 
 import { ActivityInfoRouteName, ScreenProps } from "../navigation/typings";
 import { Colours } from "../constants";
 import { normalise, StatusBarHeight } from "../helpers/responsitivity";
-import { toString } from "../helpers/dateTimeUtils";
+import { mergeDateTime, toString } from "../helpers/dateTimeUtils";
 
 export default function ActivityInfoScreen({ route }: ScreenProps<ActivityInfoRouteName>) {
-  const { activityId, name, location, date, attendedAt, reporterName } = route.params.payload;
+  const { activityId, name, location, date, time, reporterName, reportContent } = route.params.payload;
+  const dateTime = mergeDateTime(date, time);
 
   return (
-    <ScrollView style={ styles.container }
+    <ScrollView style={ styles.scrollViewContainer }
                 contentContainerStyle={ styles.containerContent }
     >
       <View style={ styles.regionContainer }
@@ -37,12 +39,12 @@ export default function ActivityInfoScreen({ route }: ScreenProps<ActivityInfoRo
         </Text>
       </View>
       <View style={ styles.regionContainer }
-            key="activity-date-region-wrapper">
+            key="activity-date-time-region-wrapper">
         <Text uppercase style={ styles.headerText }>
-          Date:
+          Date & Time:
         </Text>
         <Text text60 style={ styles.infoText }>
-          { represent(date) }
+          { represent(dateTime) }
         </Text>
       </View>
       <View style={ styles.regionContainer }
@@ -54,13 +56,13 @@ export default function ActivityInfoScreen({ route }: ScreenProps<ActivityInfoRo
           { represent(reporterName) }
         </Text>
       </View>
-      <View style={ styles.regionContainer }
-            key="activity-attended-at-region-wrapper">
+      <View style={ { justifyContent: 'center' } }
+            key="activity-report-content-region-wrapper">
         <Text uppercase style={ styles.headerText }>
-          Attended At:
+          Report Content:
         </Text>
         <Text text60 style={ styles.infoText }>
-          { represent(attendedAt) }
+          { represent(reportContent) }
         </Text>
       </View>
     </ScrollView>
@@ -78,13 +80,13 @@ function represent(value: string | Date | undefined) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollViewContainer: {
     margin: 1 + '%',
     backgroundColor: Colours.WHITE,
   },
   regionContainer: {
     height: 20 + '%',
-    justifyContent: "center"
+    justifyContent: 'center'
   },
   containerContent: {
     marginLeft: 1 + '%',

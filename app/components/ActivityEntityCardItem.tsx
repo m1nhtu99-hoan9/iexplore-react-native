@@ -24,7 +24,7 @@ export default function ActivityEntityCardItem({ item, onEditBtnPressed, onMoreB
       onDeletePressed={ onDeleteBtnPressed }
     >
       <RectButton
-        style={ styles.container }
+        style={ styles.scrollViewContainer }
         onPress={ onMoreBtnPressed }
       >
         <Text
@@ -64,7 +64,7 @@ function buildCardSubContent(item: Activity) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollViewContainer: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',

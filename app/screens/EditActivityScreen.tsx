@@ -1,21 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import { ImageStyle, ScrollView, StyleProp, StyleSheet, LogBox } from 'react-native';
-import { Button, Colors, Constants, DateTimePicker, Text, TextField, View, Incubator } from "react-native-ui-lib";
+import {
+  Button,
+  Colors,
+  Constants,
+  DateTimePicker,
+  Text,
+  TextField,
+  View,
+  Incubator,
+  TextArea
+} from "react-native-ui-lib";
 import { useFormik } from "formik";
 import { AntDesign } from "@expo/vector-icons";
+import { has } from "ramda";
 
 import { ActivityModel } from "../domain";
 import { Activity } from "../domain/Activity.d";
-import { normaliseSizeHorizontal, StatusBarHeight } from "../helpers/responsitivity";
-import { DATE_FORMAT } from "../appSettings";
+import { normaliseSizeHorizontal, normaliseSizeVertical, StatusBarHeight } from "../helpers/responsitivity";
+import { DATE_FORMAT, TIME_FORMAT } from "../appSettings";
 import { EditActivityRouteName, ScreenProps } from "../navigation/typings";
 import { Colours, ScreenNames } from "../constants";
+import { useTxtBorderLineColour } from "../hooks";
 import { useActivityDbServiceContext } from "../context/activityDbServiceContext";
 import { ActivityDbService } from "../services";
 
 // HACK: to suppress a warning thrown by `react-navigation` to warn against
 // navigation action params having too many nested object level.
-LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
+LogBox.ignoreLogs([ "Non-serializable values were found in the navigation state" ]);
 
 export default function EditActivityScreen({ route, navigation }: ScreenProps<EditActivityRouteName>) {
   const activityDbService = useActivityDbServiceContext() as ActivityDbService;
@@ -41,32 +53,38 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
               index: 0,
               routes: [ {
                 name: ScreenNames.Home
-              }]
+              } ]
             });
           }
         })
         .catch(e => {
-          e.message = `[EditActivityScreen] Error occurred while processing database update:\n${e.message}`;
-          throw e;
+          e.message = `[EditActivityScreen] Error occurred while processing database update:\n${ e.message }`;
+          console.error(e);
         });
     },
   });
 
   const {
     values, handleChange, handleBlur,
-    errors, isValid, handleSubmit, handleReset
+    errors, handleSubmit, handleReset
   } = formik;
+
+  const [
+    reportContentBorderLineColour,
+    setReportContentOnFocusBorderLineColour,
+    setReportContentOnBlurBorderLineColour
+  ] = useTxtBorderLineColour();
 
   return (
     <View flex style={ { backgroundColor: Colors.white } }>
       <ScrollView
         keyboardShouldPersistTaps="always"
-        style={ styles.container }
+        style={ styles.scrollViewContainer }
         contentContainerStyle={ { padding: 1 + '%', flexGrow: 1 } }
         keyboardDismissMode='on-drag'
       >
-        <View style={ { height: 20 + '%' } }
-              key="activity-name-text-area-wrapper">
+        <View key="activity-name-text-area-wrapper"
+              style={ styles.textFieldContainer }>
           <Incubator.TextField
             placeholder="Activity Name (*)"
             floatingPlaceholderStyle={ styles.textAreaFloatingPlaceholder }
@@ -81,8 +99,8 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
             fieldStyle={ styles.textAreaUnderline }
           />
         </View>
-        <View style={ { height: 20 + '%' } }
-              key="activity-location-text-area-wrapper">
+        <View key="activity-location-text-area-wrapper"
+              style={ styles.textFieldContainer }>
           <Incubator.TextField
             placeholder="Location"
             floatingPlaceholderStyle={ styles.textAreaFloatingPlaceholder }
@@ -97,8 +115,8 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
             fieldStyle={ styles.textAreaUnderline }
           />
         </View>
-        <View style={ { height: 20 + '%' } }
-              key="activity-event-datepicker-wrapper">
+        <View key="activity-event-datepicker-wrapper"
+              style={ styles.dateTimePickerContainer }>
           <DateTimePicker
             title='Event Date (*)'
             mode='date'
@@ -113,25 +131,24 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
           />
           <Text style={ styles.dateTimeErrorTextArea }>{ errors.date ?? '' }</Text>
         </View>
-        <View flex key="activity-attended-datepicker-wrapper"
-              style={ { height: 20 + '%', marginBottom: StatusBarHeight, justifyContent: 'flex-start' } }
-        >
+        <View key="activity-event-timepicker-wrapper"
+              style={ [ styles.dateTimePickerContainer ] }>
           <DateTimePicker
-            title='Attended at?'
-            mode='date'
-            dateFormat={ DATE_FORMAT }
+            title='Time of Attending'
+            mode='time'
+            timeFormat={ TIME_FORMAT }
             titleStyle={ { color: Colors.black } }
             style={ { fontSize: 14, flexGrow: 0.8 } }
             placeholder='Touch to set the time'
-            dialogProps={ { title: 'Attended at when?' } }
-            placeholer='Select the attended date'
-            value={ values.attendedAt }
-            onChangeText={ handleChange('attendedAt') }
+            dialogProps={ { title: 'Time of Attending?' } }
+            placeholer='Select the time of attending'
+            value={ values['time'] }
+            onChangeText={ handleChange('time') }
           />
-          <Text style={ styles.dateTimeErrorTextArea }>{ errors.attendedAt ?? '' }</Text>
+          <Text style={ styles.dateTimeErrorTextArea }>{ errors.time ?? '' }</Text>
         </View>
-        <View style={ { height: 20 + '%' } }
-              key="activity-report-name-text-area-wrapper">
+        <View key="activity-report-name-text-area-wrapper"
+              style={ styles.textFieldContainer }>
           <Incubator.TextField
             placeholder="Reporter's name (*)"
             floatingPlaceholderStyle={ styles.textAreaFloatingPlaceholder }
@@ -144,6 +161,20 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
             onChangeText={ handleChange('reporterName') }
             onBlur={ handleBlur('reporterName') }
             fieldStyle={ styles.textAreaUnderline }
+          />
+        </View>
+        <View
+          style={ [ styles.textAreaContainer, {
+            borderColor: reportContentBorderLineColour,
+          } ] }
+        >
+          <Text>Report Content: </Text>
+          <TextArea
+            style={ { fontSize: 14 } }
+            numberOfLines={ 8 }
+            onChangeText={ handleChange('reportContent') }
+            onBlur={ () => setReportContentOnBlurBorderLineColour() }
+            onFocus={ () => setReportContentOnFocusBorderLineColour() }
           />
         </View>
       </ScrollView>
@@ -177,7 +208,8 @@ export default function EditActivityScreen({ route, navigation }: ScreenProps<Ed
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollViewContainer: {
+    flexGrow: 1,
     margin: 1 + '%',
     backgroundColor: Colours.WHITE,
   },
@@ -187,17 +219,22 @@ const styles = StyleSheet.create({
   },
   textAreaFloatingPlaceholder: {
     color: Colors.black,
-    fontSize: 12
+    fontSize: 16
   },
   textAreaUnderline: {
     borderBottomWidth: 1,
     borderColor: Colors.blue20,
     paddingBottom: 4
   },
-  textAreaWrapper: {
-    height: normaliseSizeHorizontal(100),
+  textFieldContainer: {
+    marginVertical: 3 + '%'
+  },
+  textAreaContainer: {
     borderWidth: 1,
-    marginBottom: normaliseSizeHorizontal(10),
+    color: Colors.pink,
+  },
+  dateTimePickerContainer: {
+    justifyContent: 'flex-start'
   },
   dateTimeErrorTextArea: {
     color: Colors.red20,

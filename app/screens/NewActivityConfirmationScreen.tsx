@@ -5,14 +5,14 @@ import { hashString } from "react-hash-string";
 
 import { ErrorMessage, NewActivityConfirmationRouteName, ScreenProps } from "../navigation/typings";
 import { Colours, ScreenNames } from "../constants";
-import { toString } from "../helpers/dateTimeUtils";
+import { toString, mergeDateTime } from "../helpers/dateTimeUtils";
 import { Activity } from "../domain/Activity.d";
 import { useActivityDbServiceContext } from "../context/activityDbServiceContext";
 import { ActivityDbService } from "../services";
 
 // HACK: to suppress a warning thrown by `react-navigation` to warn against
 // navigation action params having too many nested object level.
-LogBox.ignoreLogs(["Non-serializable values were found in the navigation state"]);
+LogBox.ignoreLogs([ "Non-serializable values were found in the navigation state" ]);
 
 export default function NewActivityConfirmationScreen({ route, navigation }
                                                         : ScreenProps<NewActivityConfirmationRouteName>) {
@@ -63,15 +63,15 @@ export default function NewActivityConfirmationScreen({ route, navigation }
   //#region internal functional components
 
   function SucceededContent(props: { payload: Activity }) {
-    const { name, location, date, attendedAt, reporterName } = props.payload;
+    const { name, location, date, time, attendedAt, reporterName } = props.payload;
+    const dateTime = mergeDateTime(date, time);
 
     return (
       <View margin-20>
         <Text>{ `Activity Name: ${ represent(name) }` }</Text>
         <Text>{ `Location: ${ represent(location) }` }</Text>
-        <Text>{ `Date: ${ represent(date) }` }</Text>
+        <Text>{ `Date & Time of Attending: ${ represent(dateTime) }` }</Text>
         <Text>{ `Reporter's Name: ${ represent(reporterName) }` }</Text>
-        <Text>{ `Attended At: ${ represent(attendedAt) }` }</Text>
         { addedActivityId === undefined
           ? null
           : (
