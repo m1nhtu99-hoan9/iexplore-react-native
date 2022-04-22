@@ -23,7 +23,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
     onSubmit(values: Activity, _) {
       console.debug("[NewActivityScreen] Submission data: ");
       console.debug(values);
-    },
+    }
   });
 
   const {
@@ -43,7 +43,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
     <View flex style={ { backgroundColor: Colors.white } }>
       <ScrollView
         keyboardShouldPersistTaps="always"
-        style={ styles.container }
+        style={ styles.scrollViewContainer }
         contentContainerStyle={ styles.containerContent }
         keyboardDismissMode='on-drag'
       >
@@ -95,22 +95,22 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
           />
           <Text style={ styles.dateTimeErrorTextArea }>{ errors.date ?? '' }</Text>
         </View>
-        <View key="activity-attended-datepicker-wrapper"
+        <View key="activity-event-timepicker-wrapper"
               style={ { height: 20 + '%', marginBottom: StatusBarHeight, justifyContent: 'flex-start' } }
         >
           <DateTimePicker
-            title='Attended at?'
-            mode='date'
-            dateFormat={ DATE_FORMAT }
+            title='Time of Attending'
+            mode='time'
+            timeFormat={ TIME_FORMAT }
             titleStyle={ { color: Colors.black } }
             style={ { fontSize: 14, flexGrow: 0.8 } }
             placeholder='Touch to set the time'
-            dialogProps={ { title: 'Attended at when?' } }
-            placeholer='Select the attended date'
-            value={ values.attendedAt }
-            onChangeText={ handleChange('attendedAt') }
+            dialogProps={ { title: 'Time of Attending?' } }
+            placeholer='Select the time of attending'
+            value={ values['time'] }
+            onChangeText={ handleChange('time') }
           />
-          <Text style={ styles.dateTimeErrorTextArea }>{ errors.attendedAt ?? '' }</Text>
+          <Text style={ styles.dateTimeErrorTextArea }>{ errors.time ?? '' }</Text>
         </View>
         <View style={ { height: 20 + '%' } }
               key="activity-reporter-name-text-area-wrapper">
@@ -160,7 +160,7 @@ export default function NewActivityScreen({ route, navigation }: ScreenProps<New
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollViewContainer: {
     margin: 1 + '%',
     backgroundColor: Colours.WHITE,
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.blue20,
     paddingBottom: 4
   },
-  textAreaWrapper: {
+  textAreaContainer: {
     height: normaliseSizeHorizontal(100),
     borderWidth: 1,
     marginBottom: normaliseSizeHorizontal(10),

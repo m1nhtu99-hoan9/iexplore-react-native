@@ -1,6 +1,6 @@
 import { openDb } from "./dbConnUtils";
 
-import { execInitDbTablesAsync } from "./miscCommands";
+import { execInitDbTablesAsync, execDropTablesAsync } from "./miscCommands";
 import { queryDbTableNamesAsync } from "./masterQueries";
 
 import {
@@ -15,6 +15,7 @@ export {
   openDb,
   queryDbTableNamesAsync,
   execInitDbTablesAsync,
+  execDropTablesAsync,
   addNewActivityAsync,
   deleteActivityAsync,
   queryAllActivitiesAsync,

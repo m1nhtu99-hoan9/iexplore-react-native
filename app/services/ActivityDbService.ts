@@ -44,7 +44,7 @@ export default class ActivityDbService implements IActivityDbService {
             || !R.isNil(x.location) && x.location.toLowerCase().includes(normalisedSearchPhrase)
         )(this._activities);
 
-        console.debug(`[ActivityDbService.filter] Filtered activities: ${JSON.stringify(filteredActivities)}\n`);
+        console.debug(`[ActivityDbService.filter] Filtered activities: ${ JSON.stringify(filteredActivities) }\n`);
 
         resolve(filteredActivities);
       } catch (e) {
@@ -72,19 +72,24 @@ export default class ActivityDbService implements IActivityDbService {
   }
 
   public async update(id: number, modifiedActivity: Activity) {
-    const isSucceed = await updateActivityAsync(this.db, id, modifiedActivity);
+    try {
+      const isSucceed = await updateActivityAsync(this.db, id, modifiedActivity);
 
-    if (isSucceed) {
-      this._activities = [
-        ...R.reject(R.propEq("activityId", id), this._activities),
-        { activityId: id, ...modifiedActivity } as ActivityDbItem
-      ];
-      console.debug(`[ActivityDbService.update] 'activities' set to: ${ JSON.stringify(this._activities) }`)
-    } else {
-      console.warn(`[ActivityDbService.update] Failed to update Activity with ID [${ id }] for unknown reason(s).`);
+      if (isSucceed) {
+        this._activities = [
+          ...R.reject(R.propEq("activityId", id), this._activities),
+          { activityId: id, ...modifiedActivity } as ActivityDbItem
+        ];
+        console.debug(`[ActivityDbService.update] 'activities' set to: ${ JSON.stringify(this._activities) }`)
+      } else {
+        console.warn(`[ActivityDbService.update] Failed to update Activity with ID [${ id }] for unknown reason(s).`);
+      }
+
+      return isSucceed;
+    } catch (e) {
+      console.error(`[ActivityDbService.update] Failed to update Activity with ID [${ id }].\n${ e.message }`);
+      throw e;
     }
-
-    return isSucceed;
   }
 
   public async delete(id: number) {

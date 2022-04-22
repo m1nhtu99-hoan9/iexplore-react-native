@@ -1,11 +1,11 @@
 import { WebSQLDatabase, SQLTransaction, ResultSet, ResultSetError } from "expo-sqlite";
 import { append, concat, isEmpty, has, length, reduce } from "ramda";
-import { DbEntity, SqlCommandResult } from "./typings";
+import { DbRow, SqlCommandResult } from "./typings";
 
 
 export function executeSingleSqlQuery(db: WebSQLDatabase,
                                       rawSql: string,
-                                      sqlArgs: ( number | string )[] = []): Promise<DbEntity[]> {
+                                      sqlArgs: ( number | string )[] = []): Promise<DbRow[]> {
   if (!db) {
     throw new TypeError("'db' is expected to be a WebSQLDatabase instance.");
   }
@@ -28,7 +28,7 @@ export function executeSingleSqlQuery(db: WebSQLDatabase,
             has('error', x)
             ? ( { ...acc, errors: append(x.error, acc.errors) } )
             : ( { ...acc, resultRows: concat(x.rows, acc.resultRows) } ),
-          ( { errors: [] as Error[], resultRows: [] as DbEntity[] } ),
+          ( { errors: [] as Error[], resultRows: [] as DbRow[] } ),
           results
         );
         console.debug(`[_.executeSingleSqlQuery] Result analysis: ${ JSON.stringify(resultCategory) }`);
