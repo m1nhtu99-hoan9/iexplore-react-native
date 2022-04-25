@@ -53,9 +53,8 @@ export function getHash(activity: Activity) {
 
   try {
     return hashArray([ activity.name, toString(activity.date) ]);
-  }
-  catch (err) {
-    const newErr = err.constructor(`Unable to hash (${JSON.stringify(activity)}). Inner error:\n${err.message}`);
+  } catch (err) {
+    const newErr = err.constructor(`Unable to hash (${ JSON.stringify(activity) }). Inner error:\n${ err.message }`);
     if (err.stack) {
       newErr.stack = err.stack;
     }
@@ -89,9 +88,11 @@ export async function fromAsync(value: object) {
 
 
 export function consolidate(activityObj: Activity) {
-  // assigned with get the empty `TimeOnly`
-  activityObj.time = extractDateOnly();
-  console.debug(`[ActivityModel.consolidate] .time = ${activityObj.time}`);
+  if (isNil(activityObj.time)) {
+    // assigned with get the empty `TimeOnly`
+    activityObj.time = extractDateOnly();
+  }
+  console.debug(`[ActivityModel.consolidate] .time = ${ activityObj.time }`);
   activityObj.name = activityObj.name.trim();
   activityObj.reporterName = activityObj.reporterName.trim();
 
